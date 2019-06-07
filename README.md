@@ -5,7 +5,7 @@ classification.
 
 The module uses *Bag Of Word* strategy and *One Shot Encoding* to map text
 and labels (classes) to vectors suitable to be fed in an artificial
-neural network of brain.js library.
+neural network of [brain.js](https://github.com/BrainJS/brain.js) library.
 
 # How to use
 
