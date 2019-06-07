@@ -145,7 +145,7 @@ const prepareTrainData = function (traindata) {
  *   momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
  * };
  */
-exports.setConfiguration = function(config){
+exports.setConfiguration = function (config) {
     _configuration = config;
 }
 
@@ -180,11 +180,7 @@ exports.train = function (modelJSON) {
     const traindata = buildTrainDataFromInputDataString(modelJSON);
 
     const traindata_for_ann = prepareTrainData(traindata);
-
-    console.log(traindata);
-    console.log('############');
-    console.log(traindata_for_ann);
-
+    
     _status = State.TRAINING;
     let promise = _net.trainAsync(traindata_for_ann, _configuration).then(
         (result) => {
@@ -196,13 +192,18 @@ exports.train = function (modelJSON) {
     return promise;
 }
 
+exports.addData = function (traindata) {
+    const traindata_for_ann = prepareTrainData(traindata);
+    
+}
+
 /**
  * Run the model to classify a text
  * 
  * @param {*} entry is a string which we want to classify 
  */
 exports.run = function (entry) {
-    if(_status == State.UNTRAINED){
+    if (_status == State.UNTRAINED) {
         throw "Network UNTRAINED, can't make any prediction!"
     }
     // vectorize as a Bag Of Word
@@ -218,7 +219,7 @@ exports.run = function (entry) {
     for (let i = 0; i < predict.length; i++) {
         prediction[flippedClasses[i]] = predict[i];
     }
-    
+
     let result = {
         text: entry,
         label: flippedClasses[i],

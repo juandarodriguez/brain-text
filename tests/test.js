@@ -11,16 +11,27 @@ const config = {
     momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
 };
 
+// This line throw an error since network is untrainned yet
 //let r = brain_text.run("encender luz");
 
+// Change default configuration
+console.log("######## Change configuration ########");
 brain_text.setConfiguration(config);
 
+// Train the network and then run model to classify a text
 brain_text.train(modelJSON).then(() => {
+    console.log("######## Train model and then run model ########");
     let r = brain_text.run("encender luz");
     console.log(r);
+
+    console.log("######## Add new training data ########");
+    brain_text.addData([{ label: 'encender_luz', text: 'enchufa la lamparita' }])
 });
 
+// Run model to classify a text while net is being trained. Just for illustration
+// purposes, this should'n be done.
 setTimeout(() => {
+    console.log("######## Run model while is being trained ########");
     let r = brain_text.run("encender luz");
     console.log(r);
 }, 200);
