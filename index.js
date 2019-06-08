@@ -8,6 +8,7 @@ const State = {
     TRAINING: "TRAINING"
 }
 
+let _traindata = [];
 // _net is the Artificial Neural Network
 const _net = new brain.NeuralNetwork();
 // _bow is a library intended to make bag of words processing,
@@ -49,37 +50,6 @@ const shuffle = function (a) {
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
-}
-
-/**
- * Build an array of objects from the input data string
- * each object is like this:
- * {label: "encender_lampara", text:  "enciende la luz"}
- * 
- * @param {*} inputDataString is an JSON string like this
- * {
-        "encender_lampara": [
-            "enciende la luz",
-            "esto está muy oscuro"
-        ],
-        "apagar_lampara": [
-            "apaga la luz",
-            "apaga la lámpara"
-        ]
-   }
- */
-const buildTrainDataFromInputDataString = function (inputDataString) {
-    let inputDataObj = JSON.parse(inputDataString);
-    let traindata = [];
-    for (const key in inputDataObj) {
-        for (const text of inputDataObj[key]) {
-            traindata.push({ label: key, text: text })
-        }
-    }
-    // now we shuffle traindata
-    shuffle(traindata);
-
-    return traindata;
 }
 
 /**
@@ -150,36 +120,54 @@ exports.setConfiguration = function (config) {
 }
 
 /**
+ * Build an array of objects from the input data string
+ * each object is like this:
+ * {label: "encender_lampara", text:  "enciende la luz"}
+ * 
+ * @param {*} inputDataString is an JSON string like this
+ * {
+        "encender_lampara": [
+            "enciende la luz",
+            "esto está muy oscuro"
+        ],
+        "apagar_lampara": [
+            "apaga la luz",
+            "apaga la lámpara"
+        ]
+   }
+ */
+exports.loadTrainDataFromInputDataString = function (inputDataString) {
+    let inputDataObj = JSON.parse(inputDataString);
+    for (const key in inputDataObj) {
+        for (const text of inputDataObj[key]) {
+            _traindata.push({ label: key, text: text })
+        }
+    }
+    // now we shuffle traindata
+    shuffle(_traindata);
+
+    return _traindata;
+}
+
+/**
+ * Add new train data. This operation left the network outdate.
+ * It must to be trained again to take into account these new data.
+ * @param {*} traindata 
+ */
+exports.addData = function (traindata) {
+    _traindata = _traindata.concat(traindata);
+    _status = State.OUTDATED;
+}
+
+/**
  * Train the ANN with input data  JSON string.
  * 
  * Please pay attention!, this function returns a promise.
  * 
- * @param {*} modelJSON is a json string with the labels and texts
- * example of modelJSON:
- * {
- *     "encender_lampara": [
- *          "enciende la luz",
- *          "esto está muy oscuro"
- *      ],
- *      "apagar_lampara": [
- *          "apaga la luz",
- *          "apaga la lámpara"
- *      ]
- * }
  */
-exports.train = function (modelJSON) {
+exports.train = function () {
 
-    /* traindata is an array like this:
-     [
-        {label: "encender_lampara", text: "enciende la luz"},
-        ...
-        {label: "apagar_lampara", text: "apaga la lámpara"} 
-     ]
-     */
-
-    const traindata = buildTrainDataFromInputDataString(modelJSON);
-
-    const traindata_for_ann = prepareTrainData(traindata);
+    const traindata_for_ann = prepareTrainData(_traindata);
     
     _status = State.TRAINING;
     let promise = _net.trainAsync(traindata_for_ann, _configuration).then(
@@ -190,11 +178,6 @@ exports.train = function (modelJSON) {
     )
 
     return promise;
-}
-
-exports.addData = function (traindata) {
-    const traindata_for_ann = prepareTrainData(traindata);
-    
 }
 
 /**
