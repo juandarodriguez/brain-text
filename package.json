@@ -14,5 +14,6 @@
   },
   "devDependencies": {
     "jasmine": "^3.4.0"
-  }
+  },
+  "typings": "./index.d.ts"
 }
