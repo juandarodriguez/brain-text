@@ -1,5 +1,3 @@
-export function likely<T>(input: T, net: NeuralNetwork): any;
-
 export interface TrainData {
     label: string,
     text: string
@@ -23,4 +21,6 @@ export function getTrainData(): TrainData[];
 export function train();
 
 export function run(entry: string): Result;
+
+
 
