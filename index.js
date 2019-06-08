@@ -119,6 +119,10 @@ exports.setConfiguration = function (config) {
     _configuration = config;
 }
 
+exports.getConfiguration = function () {
+    return _configuration
+}
+
 /**
  * Build an array of objects from the input data string
  * each object is like this:
@@ -145,18 +149,25 @@ exports.loadTrainDataFromInputDataString = function (inputDataString) {
     }
     // now we shuffle traindata
     shuffle(_traindata);
-
-    return _traindata;
 }
 
 /**
  * Add new train data. This operation left the network outdate.
  * It must to be trained again to take into account these new data.
- * @param {*} traindata 
+ * @param {*} traindata is an array like this:
+ * 
+ * [{label: 'encender_lampara', text: 'dale a la lamparita'}]
  */
 exports.addData = function (traindata) {
     _traindata = _traindata.concat(traindata);
     _status = State.OUTDATED;
+}
+
+/** 
+ * Get train data
+ */
+exports.getTrainData = function(){
+    return _traindata;
 }
 
 /**
