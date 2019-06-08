@@ -34,9 +34,17 @@ be like this:
 const modelJSON = '{"encender_lampara": ["enciende la luz","esto está muy oscuro"],"apagar_lampara": ["apaga la luz","apaga la lámpara"]}';
 ```
 
-This string is the input to train the network:
+This data can be loaded in network by means of:
 
-let result = brain_text.train(modelJSON);
+```
+brain_text.loadTrainDataFromInputDataString(modelJSON);
+```
+
+And now the network can be trained:
+
+```
+let result = brain_text.train();
+```
 
 Since training can be a very intensive CPU operation and may last for a while, the function ``train()`` returns a promise. You only should use the network to perform classification once the trainig process is finished. You can do that by usen ``run()`` function, like this:
 
@@ -58,6 +66,19 @@ The result has this aspect:
      apagar_lampara: 0.24401657283306122 },
      status: 'TRAINED' 
    }
+```
+
+After traininig, new data can be added to train data:
+
+```
+brain_text.addData([{label: 'encender_lampara', text: 'dale a la lamparita'}]);
+```
+
+Now the network is OUTDATED. To take into account these new data, the
+network must be trained again:
+
+```
+let result = brain_text.train();
 ```
 
 The file ``test/test.js``shows how to use this module.
