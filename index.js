@@ -27,7 +27,7 @@ let _status = State.UNTRAINED;
 
 let _configuration = {
     iterations: 3000, // the maximum times to iterate the training data
-    errorThresh: 0.006, // the acceptable error percentage from training data
+    errorThresh: 0.0006, // the acceptable error percentage from training data
     log: true, // true to use console.log, when a function is supplied it is used
     logPeriod: 10, // iterations between logging out
     learningRate: 0.3, // multiply's against the input and the delta then adds to momentum
@@ -119,14 +119,22 @@ exports.setConfiguration = function (config) {
     _configuration = config;
 }
 
+/** 
+ * 
+*/
 exports.getConfiguration = function () {
     return _configuration
 }
+
 
 /**
  * Build an array of objects from the input data string
  * each object is like this:
  * {label: "encender_lampara", text:  "enciende la luz"}
+ * 
+ * The traindata array is cleared when the function start, so 
+ * each time this function is called the traindata array is 
+ * loaded from scratch.
  * 
  * @param {*} inputDataString is an JSON string like this
  * {
@@ -141,6 +149,7 @@ exports.getConfiguration = function () {
    }
  */
 exports.loadTrainDataFromInputDataString = function (inputDataString) {
+    _traindata  = [];
     let inputDataObj = JSON.parse(inputDataString);
     for (const key in inputDataObj) {
         for (const text of inputDataObj[key]) {
@@ -159,15 +168,51 @@ exports.loadTrainDataFromInputDataString = function (inputDataString) {
  * [{label: 'encender_lampara', text: 'dale a la lamparita'}]
  */
 exports.addData = function (traindata) {
+    traindata.forEach((data) => {
+        _traindata.forEach((_data) => {
+            if (data.text == _data.text) {
+                console.log("data repeated!");
+                return;
+            }
+        })
+    });
     _traindata = _traindata.concat(traindata);
     _status = State.OUTDATED;
+}
+
+/**
+ * Add one new train data. This operation left the network outdate.
+ * It must to be trained again to take into account these new data.
+ * @param {*} data is an object like this:
+ * 
+ * {label: 'encender_lampara', text: 'dale a la lamparita'}
+ */
+exports.addOneData = function (data) {
+    _traindata.forEach((_data) => {
+        if (data.text == _data.text) {
+            console.log("data repeated!");
+            return false;
+        }
+    })
+
+    _traindata = _traindata.concat([data]);
+    _status = State.OUTDATED;
+    return true;
 }
 
 /** 
  * Get train data
  */
-exports.getTrainData = function(){
+exports.getTrainData = function () {
     return _traindata;
+}
+
+exports.getState = function () {
+    return _status;
+}
+
+exports.getDict = function(){
+    return _dict;
 }
 
 /**
@@ -179,7 +224,7 @@ exports.getTrainData = function(){
 exports.train = function () {
 
     const traindata_for_ann = prepareTrainData(_traindata);
-    
+
     _status = State.TRAINING;
     let promise = _net.trainAsync(traindata_for_ann, _configuration).then(
         (result) => {
@@ -223,4 +268,29 @@ exports.run = function (entry) {
     }
 
     return result;
+}
+
+/** 
+ * Return the model trained as a JSON object
+*/
+exports.toJSON = function () {
+    return _net.toJSON();
+}
+
+/**
+ * 
+ * Load a model from a net represented as JSON object (same object obtained
+ * with toJSON())
+ * 
+ * @param {*} json_net is the json object representing the net
+ * @param {*} dict is de dictionary build when the net was trained
+ * @param {*} classes an object like this {apagar_ventilador: 0, encender_ventilador: 1, encender_lampara: 2, apagar_lampara: 3}
+ * @param {*} traindata [{label: 'encender_lampara', text: 'dale a la lamparita'}, {...}]
+ */
+exports.fromJSON = function (json_net, dict, classes, traindata) {
+    _status = State.TRAINED;
+    _dict = dict;
+    _classes = classes;
+    _traindata = traindata;
+    _net.fromJSON(json_net);
 }

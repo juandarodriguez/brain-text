@@ -46,3 +46,5 @@ setTimeout(() => {
         console.log(r);
     });
 }, 2000)
+
+console.log(brain_text.toJSON());
