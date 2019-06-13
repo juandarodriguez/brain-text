@@ -8,40 +8,14 @@ const State = {
     TRAINING: "TRAINING"
 }
 
-let _traindata = [];
-// _net is the Artificial Neural Network
-const _net = new brain.NeuralNetwork();
-// _bow is a library intended to make bag of words processing,
-// for example vectorizing strings
-const _bow = new brain_bow.BagOfWords();
-// _dict is a dictionary build from all the sentences of input data texts
-let _dict = {};
-// _classes are all the classes from input data text formatted to feed the ANN
-/* _classes is like this:
-
-    { apagar_lampara: 0, encender_lampara: 1 }
-*/
-let _classes = {};
-
-let _status = State.UNTRAINED;
-
-let _configuration = {
-    iterations: 3000, // the maximum times to iterate the training data
-    errorThresh: 0.0006, // the acceptable error percentage from training data
-    log: true, // true to use console.log, when a function is supplied it is used
-    logPeriod: 10, // iterations between logging out
-    learningRate: 0.3, // multiply's against the input and the delta then adds to momentum
-    momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
-};
-
 /**
  * Shuffle an array of objects
  * @param {*} a is an array of objects:
-    // [
-    //    {label: "encender_lampara", text: "enciende la luz"},
-    //    ...
-    //    {label: "apagar_lampara", text: "apaga la lámpara"} 
-    // ]
+ *  [
+ *      {label: "encender_lampara", text: "enciende la luz"},
+ *      ...
+ *      {label: "apagar_lampara", text: "apaga la lámpara"} 
+ *  ]
  * 
  */
 const shuffle = function (a) {
@@ -52,56 +26,72 @@ const shuffle = function (a) {
     return a;
 }
 
-/**
- * Prepare train data to be feed in brain.js Artificial Neural Network
- * 
- * @param {*} traindata  is an array of objects like this
- *  [
- *     {label: "encender_lampara", text: "enciende la luz"},
- *     ...
- *     {label: "apagar_lampara", text: "apaga la lámpara"} 
- *   ]
- */
-const prepareTrainData = function (traindata) {
-    let texts = [];
-    let traindata_for_ann;
+const buildClassesAndDict = function (traindata, bow) {
 
+    let texts = [];
+    let classes = {};
     // extract all the classe (which are the labels) without
     // repetition from traindata and map to number in order to
     // feed the ANN
     let i = 0;
     for (let data of traindata) {
         texts.push(data.text);
-        if (_classes[data.label] == undefined) {
-            _classes[data.label] = i;
+        if (classes[data.label] == undefined) {
+            classes[data.label] = i;
             i++;
         }
     }
 
-    // build dictionary
-    _dict = _bow.extractDictionary(texts);
+    let dict = bow.extractDictionary(texts);
 
-    // build training data to feed ANN
-    /* 
-    traindata_for_ann is like:
-    [ { input: [ 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 ], output: [ 1, 0 ] },
-      { input: [ 0, 0, 0, 1, 1, 1, 1, 0, 0, 0 ], output: [ 1, 0 ] },
-      { input: [ 0, 1, 0, 0, 0, 0, 0, 1, 1, 1 ], output: [ 0, 1 ] },
-      { input: [ 0, 1, 1, 0, 0, 0, 0, 1, 0, 0 ], output: [ 0, 1 ] } ]
-    */
-    traindata_for_ann = [];
-    for (let data of traindata) {
-        let item = {
-            input: _bow.bow(data.text, _dict),
-            output: _bow.vec_result(_classes[data.label], Object.keys(_classes).length)
-        }
-        traindata_for_ann.push(item);
-    }
-
-    return traindata_for_ann;
+    return { classes: classes, texts: texts, dict: dict };
 }
 
-//~~~~~~~~~~~ EXPORTED OBJECTS ~~~~~~~~~~~//
+/////// EXPORTED CONSTRUCTOR FUNCTION /////////
+
+function BrainText() {
+
+    /*
+     * An array of object like this:
+     * [
+     *     {label: "encender_lampara", text: "enciende la luz"},
+     *     ...
+     *     {label: "apagar_lampara", text: "apaga la lámpara"} 
+     *   ]
+     */
+    this._traindata = [];
+    // _net is the Artificial Neural Network
+    this._net = new brain.NeuralNetwork();
+    // _bow is a library intended to make bag of words processing,
+    // for example vectorizing strings
+    this._bow = new brain_bow.BagOfWords();
+    // _dict is a dictionary build from all the sentences of input data texts
+    this._dict = {};
+    /* _classes are all the classes from input data text formatted to feed the ANN
+     * _classes is like this:
+     * 
+     *  { apagar_lampara: 0, encender_lampara: 1 }
+     */
+    this._classes = {};
+
+    /**
+     * An array of texts used to train the network
+     */
+    this._texts = [];
+
+    // The status of the network
+    this._status = State.UNTRAINED;
+
+    // Configuration for learning process
+    this._configuration = {
+        iterations: 3000, // the maximum times to iterate the training data
+        errorThresh: 0.0006, // the acceptable error percentage from training data
+        log: true, // true to use console.log, when a function is supplied it is used
+        logPeriod: 10, // iterations between logging out
+        learningRate: 0.3, // multiply's against the input and the delta then adds to momentum
+        momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
+    };
+}
 
 /**
  * Set a new configuration to training net
@@ -115,17 +105,63 @@ const prepareTrainData = function (traindata) {
  *   momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
  * };
  */
-exports.setConfiguration = function (config) {
-    _configuration = config;
+BrainText.prototype.setConfiguration = function (config) {
+    this._configuration = config;
 }
 
 /** 
  * 
 */
-exports.getConfiguration = function () {
-    return _configuration
+BrainText.prototype.getConfiguration = function () {
+    return this._configuration
 }
 
+/**
+ * Prepare train data to be feed in brain.js Artificial Neural Network
+ * 
+ * @param {*} traindata  is an array of objects like this
+ *  [
+ *     {label: "encender_lampara", text: "enciende la luz"},
+ *     ...
+ *     {label: "apagar_lampara", text: "apaga la lámpara"} 
+ *   ]
+ * 
+ * returns an object with traindata prepared to be feed in a neural network,
+ * the classes as an object wich maps the class name to a number, like this:
+ * {apagar_ventilador: 0, encender_ventilador: 1, encender_lampara: 2, apagar_lampara: 3}
+ * and the dictionary for BOW.
+ */
+BrainText.prototype.prepareTrainData = function (traindata) {
+    let traindata_for_ann;
+
+    // build training data to feed ANN
+    /* 
+    traindata_for_ann is like:
+    [ { input: [ 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 ], output: [ 1, 0 ] },
+      { input: [ 0, 0, 0, 1, 1, 1, 1, 0, 0, 0 ], output: [ 1, 0 ] },
+      { input: [ 0, 1, 0, 0, 0, 0, 0, 1, 1, 1 ], output: [ 0, 1 ] },
+      { input: [ 0, 1, 1, 0, 0, 0, 0, 1, 0, 0 ], output: [ 0, 1 ] } ]
+    */
+    traindata_for_ann = [];
+    for (let data of traindata) {
+        let item = {
+            input: this._bow.bow(data.text, this._dict),
+            output: this._bow.vec_result(
+                this._classes[data.label], Object.keys(this._classes).length)
+        }
+        traindata_for_ann.push(item);
+    }
+
+    return traindata_for_ann;
+}
+
+BrainText.prototype.setUpdateInfrastructure = function () {
+    let { classes, texts, dict }
+        = buildClassesAndDict(this._traindata, this._bow);
+    this._classes = classes;
+    this._texts = texts;
+    this._dict = dict;
+}
 
 /**
  * Build an array of objects from the input data string
@@ -148,16 +184,18 @@ exports.getConfiguration = function () {
         ]
    }
  */
-exports.loadTrainDataFromInputDataString = function (inputDataString) {
-    _traindata  = [];
+BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString) {
+    // reset traindata vector
+    this._traindata = [];
     let inputDataObj = JSON.parse(inputDataString);
     for (const key in inputDataObj) {
         for (const text of inputDataObj[key]) {
-            _traindata.push({ label: key, text: text })
+            this._traindata.push({ label: key, text: text })
         }
     }
     // now we shuffle traindata
-    shuffle(_traindata);
+    shuffle(this._traindata);
+    this.setUpdateInfrastructure();
 }
 
 /**
@@ -167,17 +205,21 @@ exports.loadTrainDataFromInputDataString = function (inputDataString) {
  * 
  * [{label: 'encender_lampara', text: 'dale a la lamparita'}]
  */
-exports.addData = function (traindata) {
+BrainText.prototype.addData = function (traindata) {
     traindata.forEach((data) => {
-        _traindata.forEach((_data) => {
+        this._traindata.forEach((_data) => {
             if (data.text == _data.text) {
                 console.log("data repeated!");
-                return;
+                return false;
             }
         })
     });
-    _traindata = _traindata.concat(traindata);
-    _status = State.OUTDATED;
+
+    this._traindata = this._traindata.concat(traindata);
+    this.setUpdateInfrastructure()
+
+    this._status = State.OUTDATED;
+    return true;
 }
 
 /**
@@ -187,32 +229,33 @@ exports.addData = function (traindata) {
  * 
  * {label: 'encender_lampara', text: 'dale a la lamparita'}
  */
-exports.addOneData = function (data) {
-    _traindata.forEach((_data) => {
+BrainText.prototype.addOneData = function (data) {
+    this._traindata.forEach((_data) => {
         if (data.text == _data.text) {
             console.log("data repeated!");
             return false;
         }
     })
 
-    _traindata = _traindata.concat([data]);
-    _status = State.OUTDATED;
+    this._traindata = this._traindata.concat([data]);
+    this.setUpdateInfrastructure();
+    this._status = State.OUTDATED;
     return true;
 }
 
 /** 
  * Get train data
  */
-exports.getTrainData = function () {
-    return _traindata;
+BrainText.prototype.getTraindata = function () {
+    return this._traindata;
 }
 
-exports.getState = function () {
-    return _status;
+BrainText.prototype.getState = function () {
+    return this._status;
 }
 
-exports.getDict = function(){
-    return _dict;
+BrainText.prototype.getDict = function () {
+    return this._dict;
 }
 
 /**
@@ -221,14 +264,14 @@ exports.getDict = function(){
  * Please pay attention!, this function returns a promise.
  * 
  */
-exports.train = function () {
+BrainText.prototype.train = function () {
 
-    const traindata_for_ann = prepareTrainData(_traindata);
+    const traindata_for_ann = this.prepareTrainData(this._traindata);
 
-    _status = State.TRAINING;
-    let promise = _net.trainAsync(traindata_for_ann, _configuration).then(
+    this._status = State.TRAINING;
+    let promise = this._net.trainAsync(traindata_for_ann, this._configuration).then(
         (result) => {
-            _status = State.TRAINED;
+            this._status = State.TRAINED;
             return result;
         }
     )
@@ -241,17 +284,17 @@ exports.train = function () {
  * 
  * @param {*} entry is a string which we want to classify 
  */
-exports.run = function (entry) {
-    if (_status == State.UNTRAINED) {
+BrainText.prototype.run = function (entry) {
+    if (this._status == State.UNTRAINED) {
         throw "Network UNTRAINED, can't make any prediction!"
     }
     // vectorize as a Bag Of Word
-    let term = _bow.bow(entry, _dict);
-    let predict = _net.run(term);
-    let i = _bow.maxarg(predict);
+    let term = this._bow.bow(entry, this._dict);
+    let predict = this._net.run(term);
+    let i = this._bow.maxarg(predict);
     let flippedClasses = {};
-    for (let key in _classes) {
-        flippedClasses[_classes[key]] = key
+    for (let key in this._classes) {
+        flippedClasses[this._classes[key]] = key
     }
 
     let prediction = {};
@@ -264,7 +307,7 @@ exports.run = function (entry) {
         label: flippedClasses[i],
         confidence: predict[i],
         prediction: prediction,
-        status: _status
+        status: this._status
     }
 
     return result;
@@ -273,8 +316,16 @@ exports.run = function (entry) {
 /** 
  * Return the model trained as a JSON object
 */
-exports.toJSON = function () {
-    return _net.toJSON();
+BrainText.prototype.toJSON = function () {
+    let model = {
+        net: this._net.toJSON(),
+        dict: this._dict,
+        classes: this._classes,
+        texts: this._texts,
+        traindata: this._traindata,
+    };
+
+    return model;
 }
 
 /**
@@ -287,10 +338,13 @@ exports.toJSON = function () {
  * @param {*} classes an object like this {apagar_ventilador: 0, encender_ventilador: 1, encender_lampara: 2, apagar_lampara: 3}
  * @param {*} traindata [{label: 'encender_lampara', text: 'dale a la lamparita'}, {...}]
  */
-exports.fromJSON = function (json_net, dict, classes, traindata) {
-    _status = State.TRAINED;
-    _dict = dict;
-    _classes = classes;
-    _traindata = traindata;
-    _net.fromJSON(json_net);
+BrainText.prototype.fromJSON = function (json_model) {
+    this._status = State.TRAINED;
+    this._dict = json_model.dict;
+    this._classes = json_model.classes;
+    this._texts = json_model.texts;
+    this._traindata = json_model.traindata;
+    this._net.fromJSON(json_model.net);
 }
+
+module.exports = BrainText;

@@ -1,4 +1,4 @@
-const brain_text = require('brain-text')
+const BrainText = require('../index');
 
 const modelJSON = '{"encender_lampara": ["enciende la luz","esto está muy oscuro"],"apagar_lampara": ["apaga la luz","apaga la lámpara"]}';
 
@@ -11,20 +11,22 @@ const config = {
     momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
 };
 
+let brainText = new BrainText();
+
 // This line throw an error since network is untrainned yet
 //let r = brain_text.run("encender luz");
 
 // Change default configuration
 console.log("######## Change configuration ########");
-brain_text.setConfiguration(config);
+brainText.setConfiguration(config);
 
 // Load data from JSON string
-brain_text.loadTrainDataFromInputDataString(modelJSON);
+brainText.loadTrainDataFromInputDataString(modelJSON);
 
 // Train the network and then run model to classify a text
-brain_text.train().then(() => {
+brainText.train().then(() => {
     console.log("######## Train model and then run model ########");
-    let r = brain_text.run("encender luz");
+    let r = brainText.run("encender luz");
     console.log(r);
 });
 
@@ -32,19 +34,19 @@ brain_text.train().then(() => {
 // purposes, this should'n be done.
 setTimeout(() => {
     console.log("######## Run model while is being trained ########");
-    let r = brain_text.run("encender luz");
+    let r = brainText.run("encender luz");
     console.log(r);
 }, 200);
 
 setTimeout(() => {
-    brain_text.addData([{label: 'encender_lampara', text: 'dale a la lamparita'}]);
+    brainText.addData([{label: 'encender_lampara', text: 'dale a la lamparita'}]);
 
-    brain_text.train().then(() => {
-        let r = brain_text.run('dale a la lamparita');
+    brainText.train().then(() => {
+        let r = brainText.run('dale a la lamparita');
         console.log(r);
-        r = brain_text.run('encender luz');
+        r = brainText.run('encender luz');
         console.log(r);
     });
 }, 2000)
 
-console.log(brain_text.toJSON());
+console.log(brainText.toJSON());
