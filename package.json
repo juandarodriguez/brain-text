@@ -1,6 +1,6 @@
 {
   "name": "brain-text",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "This is a wrapper module over brain.js intended to perform text classification.",
   "main": "index.js",
   "scripts": {

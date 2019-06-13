@@ -343,7 +343,7 @@ BrainText.prototype.fromJSON = function (json_model) {
     this._dict = json_model.dict;
     this._classes = json_model.classes;
     this._texts = json_model.texts;
-    //this._traindata = json_model.traindata;
+    this._traindata = json_model.traindata;
     this._net.fromJSON(json_model.net);
 }
 
