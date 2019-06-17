@@ -2,9 +2,9 @@ const brain = require('brain.js');
 const brain_bow = require('brain-bow');
 
 const State = {
+    EMPTY: "EMPTY",
     UNTRAINED: "UNTRAINED",
     TRAINED: "TRAINED",
-    OUTDATED: "OUTDATED",
     TRAINING: "TRAINING"
 }
 
@@ -80,7 +80,7 @@ function BrainText() {
     this._texts = [];
 
     // The status of the network
-    this._status = State.UNTRAINED;
+    this._status = State.EMPTY;
 
     // Configuration for learning process
     this._configuration = {
@@ -218,7 +218,7 @@ BrainText.prototype.addData = function (traindata) {
     this._traindata = this._traindata.concat(traindata);
     this.setUpdateInfrastructure()
 
-    this._status = State.OUTDATED;
+    this._status = State.UNTRAINED;
     return true;
 }
 
@@ -239,7 +239,18 @@ BrainText.prototype.addOneData = function (data) {
 
     this._traindata = this._traindata.concat([data]);
     this.setUpdateInfrastructure();
-    this._status = State.OUTDATED;
+    this._status = State.UNTRAINED;
+    return true;
+}
+
+BrainText.prototype.removeData = function (entry) {
+    this._traindata.splice(
+        this._traindata.findIndex(
+            v => v.label === entry.label && v.text === entry.text), 1);
+
+    this.setUpdateInfrastructure();
+    this._status = State.UNTRAINED;
+    console.log(this._traindata);
     return true;
 }
 
@@ -273,6 +284,9 @@ BrainText.prototype.train = function () {
         (result) => {
             this._status = State.TRAINED;
             return result;
+        },
+        (error) => {
+            throw error;
         }
     )
 
