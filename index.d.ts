@@ -1,6 +1,4 @@
-export interface BrainText{
-
-};
+export function BrainText();
 
 
 
