@@ -1,5 +1,4 @@
 const brain = require('brain.js');
-const stopword = require('stopword');
 const brain_bow = require('brain-bow');
 
 const State = {
@@ -111,18 +110,6 @@ function BrainText() {
 }
 
 /**
- * Transform the text given as parameter to improve its representation.
- * @param {*} text 
- */
-BrainText.prototype.transformEntry = function(text){
-    let arrText = text.split(' ');
-    
-    let textProcessed = stopword.removeStopwords(arrText, s_words);
-
-    return textProcessed.join(' ');
-}
-
-/**
  * Set a new configuration to training net
  * @param {*} config is like this:
  * {
@@ -219,7 +206,7 @@ BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString
     let inputDataObj = JSON.parse(inputDataString);
     for (const key in inputDataObj) {
         for (const text of inputDataObj[key]) {
-            this._traindata.push({ label: key, text: this.transformEntry(text)})
+            this._traindata.push({ label: key, text: text})
         }
     }
     // now we shuffle traindata
@@ -237,7 +224,7 @@ BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString
 BrainText.prototype.addData = function (traindata) {
     let traindataProcessed = [];
     traindata.forEach((data) => {
-        let dataProcessed = {label: data.label, text: this.transformEntry(data.text)};
+        let dataProcessed = {label: data.label, text: data.text};
         traindataProcessed.push(dataProcessed);
         this._traindata.forEach((_data) => {
             if (dataProcessed.text == _data.text) {
@@ -262,7 +249,7 @@ BrainText.prototype.addData = function (traindata) {
  * {label: 'encender_lampara', text: 'dale a la lamparita'}
  */
 BrainText.prototype.addOneData = function (data) {
-    let dataProcessed = {label: data.label, text: this.transformEntry(data.text)};
+    let dataProcessed = {label: data.label, text: data.text};
     this._traindata.forEach((_data) => {
         if (dataProcessed.text == _data.text) {
             console.log("data repeated!");
@@ -277,7 +264,7 @@ BrainText.prototype.addOneData = function (data) {
 }
 
 BrainText.prototype.removeData = function (entry) {
-    let entryProcessed = {label: entry.label, text: this.transformEntry(entry.text)};
+    let entryProcessed = {label: entry.label, text: entry.text};
     this._traindata.splice(
         this._traindata.findIndex(
             v => v.label === entryProcessed.label && v.text === entryProcessed.text), 1);
@@ -336,9 +323,8 @@ BrainText.prototype.run = function (text) {
     if (this._status == State.UNTRAINED) {
         throw "Network UNTRAINED, can't make any prediction!"
     }
-    let textProcessed = this.transformEntry(text);
     // vectorize as a Bag Of Word
-    let term = this._bow.bow(textProcessed, this._dict);
+    let term = this._bow.bow(text, this._dict);
     let predict = this._net.run(term);
     let i = this._bow.maxarg(predict);
     let flippedClasses = {};

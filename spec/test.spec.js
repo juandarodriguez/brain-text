@@ -28,11 +28,9 @@ describe("Basic operations", function () {
     });
 
     it("Get train data", function () {
-        let textProcessed = brainText.transformEntry("enciende la luz");
-
         let td = brainText.getTraindata();
         expect(td).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: textProcessed }]
+            [{ label: "encender_lampara", text: "enciende la luz" }]
         ))
     });
 
@@ -50,25 +48,21 @@ describe("Basic operations", function () {
             { label: "apagar_lampara", text: "quita la lamparita" }
         ]);
 
-        let textProcessed1 = brainText.transformEntry("dale a la lamparita");
-        let textProcessed2 = brainText.transformEntry("quita la lamparita");
-
         // Due to stopwords text is modified
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: textProcessed1 }]
+            [{ label: "encender_lampara", text: "dale a la lamparita" }]
         ));
 
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "apagar_lampara", text: textProcessed2 }]
+            [{ label: "apagar_lampara", text: "quita la lamparita" }]
         ))
     });
 
     it("Add just one data", function () {
-        let textProcessed = brainText.transformEntry("dale a la lucecita");
 
         brainText.addOneData({ label: "encender_lampara", text: "dale a la lucecita" });
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: textProcessed }]
+            [{ label: "encender_lampara", text: "dale a la lucecita" }]
         ));
     })
 });
