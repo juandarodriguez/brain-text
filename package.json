@@ -1,6 +1,6 @@
 {
   "name": "brain-text",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "This is a wrapper module over brain.js intended to perform text classification.",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,6 @@
   "dependencies": {
     "brain-bow": "^1.0.0",
     "brain.js": "^1.6.1",
-    "natural": "^0.6.3",
     "stopword": "^0.2.4"
   },
   "devDependencies": {

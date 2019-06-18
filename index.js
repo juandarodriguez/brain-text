@@ -1,5 +1,4 @@
 const brain = require('brain.js');
-const natural = require('natural');
 const stopword = require('stopword');
 const brain_bow = require('brain-bow');
 
@@ -9,8 +8,6 @@ const State = {
     TRAINED: "TRAINED",
     TRAINING: "TRAINING"
 }
-
-natural.PorterStemmerEs.attach();
 
 /**
  * Shuffle an array of objects
@@ -108,11 +105,11 @@ function BrainText() {
  * @param {*} text 
  */
 BrainText.prototype.transformEntry = function(text){
-    let arrStemmed = text.tokenizeAndStem();
+    let arrText = text.split(' ');
     
-    let textProcessed = arrStemmed.join(' ');
+    let textProcessed = stopword.removeStopwords(arrText, stopword.es);
 
-    return textProcessed;
+    return textProcessed.join(' ');
 }
 
 /**
