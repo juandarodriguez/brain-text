@@ -9,6 +9,16 @@ const State = {
     TRAINING: "TRAINING"
 }
 
+const s_words = [
+    'a', 'un', 'el', 'ella', 'y', 'sobre', 'de', 'la', 'que', 'en',
+    'los', 'del', 'se', 'las', 'por', 'un', 'para', 'con',
+    'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le',
+    'ya', 'o', 'porque', 'cuando', 'muy', 'sin', 'sobre', 'también',
+    'me', 'hasta', 'donde', 'quien', 'desde', 'nos', 'durante', 'uno',
+    'ni', 'contra', 'ese', 'eso', 'mí', 'qué', 'otro', 'él', 'cual',
+    'poco', 'mi', 'tú', 'te', 'ti', 'sí',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_'];
+
 /**
  * Shuffle an array of objects
  * @param {*} a is an array of objects:
@@ -107,7 +117,7 @@ function BrainText() {
 BrainText.prototype.transformEntry = function(text){
     let arrText = text.split(' ');
     
-    let textProcessed = stopword.removeStopwords(arrText, stopword.es);
+    let textProcessed = stopword.removeStopwords(arrText, s_words);
 
     return textProcessed.join(' ');
 }
