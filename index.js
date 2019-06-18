@@ -1,5 +1,5 @@
 const brain = require('brain.js');
-const lorca = require('lorca-nlp');
+const natural = require('natural');
 const stopword = require('stopword');
 const brain_bow = require('brain-bow');
 
@@ -9,6 +9,8 @@ const State = {
     TRAINED: "TRAINED",
     TRAINING: "TRAINING"
 }
+
+natural.PorterStemmerEs.attach();
 
 /**
  * Shuffle an array of objects
@@ -106,10 +108,9 @@ function BrainText() {
  * @param {*} text 
  */
 BrainText.prototype.transformEntry = function(text){
-    let doc = lorca(text);
-    let arrStemmedText = doc.words().stem().get();
-    let arrTextProcessed = stopword.removeStopwords(arrStemmedText, stopword.es);
-    let textProcessed = arrTextProcessed.join(' ');
+    let arrStemmed = text.tokenizeAndStem();
+    
+    let textProcessed = arrStemmed.join(' ');
 
     return textProcessed;
 }

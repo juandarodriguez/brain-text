@@ -1,6 +1,4 @@
 const BrainText = require('../index');
-const lorca = require('lorca-nlp');
-const stopword = require('stopword');
 
 console.log(BrainText);
 
