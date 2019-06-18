@@ -9,7 +9,7 @@
   "author": "Juan David Rodríguez <juanda@juandarodriguez.es>",
   "license": "GPL-2.0",
   "dependencies": {
-    "brain-bow": "^1.0.5",
+    "brain-bow": "^1.0.6",
     "brain.js": "^1.6.1"
   },
   "devDependencies": {
