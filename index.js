@@ -1,5 +1,4 @@
 const brain = require('brain.js');
-const natural = require('natural');
 const lorca = require('lorca-nlp');
 const stopword = require('stopword');
 const brain_bow = require('brain-bow');
