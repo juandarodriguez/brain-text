@@ -1,4 +1,6 @@
-const BrainText  = require('../index');
+const BrainText = require('../index');
+const lorca = require('lorca-nlp');
+const stopword = require('stopword');
 
 console.log(BrainText);
 
@@ -28,9 +30,11 @@ describe("Basic operations", function () {
     });
 
     it("Get train data", function () {
+        let textProcessed = brainText.transformEntry("enciende la luz");
+
         let td = brainText.getTraindata();
         expect(td).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: "enciende la luz" }]
+            [{ label: "encender_lampara", text: textProcessed }]
         ))
     });
 
@@ -47,19 +51,26 @@ describe("Basic operations", function () {
             { label: "encender_lampara", text: "dale a la lamparita" },
             { label: "apagar_lampara", text: "quita la lamparita" }
         ]);
+
+        let textProcessed1 = brainText.transformEntry("dale a la lamparita");
+        let textProcessed2 = brainText.transformEntry("quita la lamparita");
+
+        // Due to stopwords text is modified
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: "dale a la lamparita" }]
+            [{ label: "encender_lampara", text: textProcessed1 }]
         ));
 
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "apagar_lampara", text: "quita la lamparita" }]
-        ));
+            [{ label: "apagar_lampara", text: textProcessed2 }]
+        ))
     });
 
-    it("Add just one data", function(){
+    it("Add just one data", function () {
+        let textProcessed = brainText.transformEntry("dale a la lucecita");
+
         brainText.addOneData({ label: "encender_lampara", text: "dale a la lucecita" });
         expect(brainText.getTraindata()).toEqual(jasmine.arrayContaining(
-            [{ label: "encender_lampara", text: "dale a la lucecita" }]
+            [{ label: "encender_lampara", text: textProcessed }]
         ));
     })
 });
@@ -112,14 +123,14 @@ describe("Export and import JSON", function () {
 
 });
 
-describe("Create network just adding data", function(){
+describe("Create network just adding data", function () {
     let brainText;
     beforeEach(function () {
         brainText = new BrainText();
         brainText.setConfiguration(config)
         brainText.addData([
-            {label: 'encender_lampara', text: "enciende la luz"},
-            {label: 'apagar_lampara', text: "apaga la luz"}
+            { label: 'encender_lampara', text: "enciende la luz" },
+            { label: 'apagar_lampara', text: "apaga la luz" }
         ]);
         return brainText.train();
     });

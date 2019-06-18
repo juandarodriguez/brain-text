@@ -1,4 +1,7 @@
 const brain = require('brain.js');
+const natural = require('natural');
+const lorca = require('lorca-nlp');
+const stopword = require('stopword');
 const brain_bow = require('brain-bow');
 
 const State = {
@@ -26,6 +29,12 @@ const shuffle = function (a) {
     return a;
 }
 
+/**
+ * Build an object wich maps classes names to number and the dictionary
+ * which will be used to vectorize words.
+ * @param {*} traindata 
+ * @param {*} bow 
+ */
 const buildClassesAndDict = function (traindata, bow) {
 
     let texts = [];
@@ -91,6 +100,19 @@ function BrainText() {
         learningRate: 0.3, // multiply's against the input and the delta then adds to momentum
         momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
     };
+}
+
+/**
+ * Transform the text given as parameter to improve its representation.
+ * @param {*} text 
+ */
+BrainText.prototype.transformEntry = function(text){
+    let doc = lorca(text);
+    let arrStemmedText = doc.words().stem().get();
+    let arrTextProcessed = stopword.removeStopwords(arrStemmedText, stopword.es);
+    let textProcessed = arrTextProcessed.join(' ');
+
+    return textProcessed;
 }
 
 /**
@@ -190,7 +212,7 @@ BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString
     let inputDataObj = JSON.parse(inputDataString);
     for (const key in inputDataObj) {
         for (const text of inputDataObj[key]) {
-            this._traindata.push({ label: key, text: text })
+            this._traindata.push({ label: key, text: this.transformEntry(text)})
         }
     }
     // now we shuffle traindata
@@ -206,16 +228,19 @@ BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString
  * [{label: 'encender_lampara', text: 'dale a la lamparita'}]
  */
 BrainText.prototype.addData = function (traindata) {
+    let traindataProcessed = [];
     traindata.forEach((data) => {
+        let dataProcessed = {label: data.label, text: this.transformEntry(data.text)};
+        traindataProcessed.push(dataProcessed);
         this._traindata.forEach((_data) => {
-            if (data.text == _data.text) {
+            if (dataProcessed.text == _data.text) {
                 console.log("data repeated!");
                 return false;
             }
         })
     });
 
-    this._traindata = this._traindata.concat(traindata);
+    this._traindata = this._traindata.concat(traindataProcessed);
     this.setUpdateInfrastructure()
 
     this._status = State.UNTRAINED;
@@ -230,23 +255,25 @@ BrainText.prototype.addData = function (traindata) {
  * {label: 'encender_lampara', text: 'dale a la lamparita'}
  */
 BrainText.prototype.addOneData = function (data) {
+    let dataProcessed = {label: data.label, text: this.transformEntry(data.text)};
     this._traindata.forEach((_data) => {
-        if (data.text == _data.text) {
+        if (dataProcessed.text == _data.text) {
             console.log("data repeated!");
             return false;
         }
     })
 
-    this._traindata = this._traindata.concat([data]);
+    this._traindata = this._traindata.concat([dataProcessed]);
     this.setUpdateInfrastructure();
     this._status = State.UNTRAINED;
     return true;
 }
 
 BrainText.prototype.removeData = function (entry) {
+    let entryProcessed = {label: entry.label, text: this.transformEntry(entry.text)};
     this._traindata.splice(
         this._traindata.findIndex(
-            v => v.label === entry.label && v.text === entry.text), 1);
+            v => v.label === entryProcessed.label && v.text === entryProcessed.text), 1);
 
     this.setUpdateInfrastructure();
     this._status = State.UNTRAINED;
@@ -296,14 +323,15 @@ BrainText.prototype.train = function () {
 /**
  * Run the model to classify a text
  * 
- * @param {*} entry is a string which we want to classify 
+ * @param {*} text is a string which we want to classify 
  */
-BrainText.prototype.run = function (entry) {
+BrainText.prototype.run = function (text) {
     if (this._status == State.UNTRAINED) {
         throw "Network UNTRAINED, can't make any prediction!"
     }
+    let textProcessed = this.transformEntry(text);
     // vectorize as a Bag Of Word
-    let term = this._bow.bow(entry, this._dict);
+    let term = this._bow.bow(textProcessed, this._dict);
     let predict = this._net.run(term);
     let i = this._bow.maxarg(predict);
     let flippedClasses = {};
@@ -317,7 +345,7 @@ BrainText.prototype.run = function (entry) {
     }
 
     let result = {
-        text: entry,
+        text: text,
         label: flippedClasses[i],
         confidence: predict[i],
         prediction: prediction,
