@@ -301,6 +301,12 @@ BrainText.prototype.train = function () {
     const traindata_for_ann = this.prepareTrainData(this._traindata);
 
     this._status = State.TRAINING;
+    // a new network is created in order to start training from scratch
+    // I have perceived that when new data is added to a trained network,
+    // sometimes the train error can't reach a minimun (high) value and training process
+    // can't lower it. It seems like a local minimun is reached and the process
+    // is trapped. I've found too, that beginning from a new net solves the problem
+    this._net = new brain.NeuralNetwork();
     let promise = this._net.trainAsync(traindata_for_ann, this._configuration).then(
         (result) => {
             this._status = State.TRAINED;
