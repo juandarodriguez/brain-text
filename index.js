@@ -16,7 +16,8 @@ const s_words = [
     'me', 'hasta', 'donde', 'quien', 'desde', 'nos', 'durante', 'uno',
     'ni', 'contra', 'ese', 'eso', 'mí', 'qué', 'otro', 'él', 'cual',
     'poco', 'mi', 'tú', 'te', 'ti', 'sí',
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_'];
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_'
+];
 
 /**
  * Shuffle an array of objects
@@ -28,7 +29,7 @@ const s_words = [
  *  ]
  * 
  */
-const shuffle = function (a) {
+const shuffle = function(a) {
     for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
@@ -42,7 +43,7 @@ const shuffle = function (a) {
  * @param {*} traindata 
  * @param {*} bow 
  */
-const buildClassesAndDict = function (traindata, bow) {
+const buildClassesAndDict = function(traindata, bow, lang) {
 
     let texts = [];
     let classes = {};
@@ -58,7 +59,7 @@ const buildClassesAndDict = function (traindata, bow) {
         }
     }
 
-    let dict = bow.extractDictionary(texts);
+    let dict = bow.extractDictionary(texts, lang);
 
     return { classes: classes, texts: texts, dict: dict };
 }
@@ -121,14 +122,14 @@ function BrainText() {
  *   momentum: 0.1, // multiply's against the specified "change" then adds to learning rate for change
  * };
  */
-BrainText.prototype.setConfiguration = function (config) {
+BrainText.prototype.setConfiguration = function(config) {
     this._configuration = config;
 }
 
 /** 
  * 
-*/
-BrainText.prototype.getConfiguration = function () {
+ */
+BrainText.prototype.getConfiguration = function() {
     return this._configuration
 }
 
@@ -147,7 +148,7 @@ BrainText.prototype.getConfiguration = function () {
  * {apagar_ventilador: 0, encender_ventilador: 1, encender_lampara: 2, apagar_lampara: 3}
  * and the dictionary for BOW.
  */
-BrainText.prototype.prepareTrainData = function (traindata) {
+BrainText.prototype.prepareTrainData = function(traindata) {
     let traindata_for_ann;
 
     // build training data to feed ANN
@@ -171,9 +172,8 @@ BrainText.prototype.prepareTrainData = function (traindata) {
     return traindata_for_ann;
 }
 
-BrainText.prototype.setUpdateInfrastructure = function () {
-    let { classes, texts, dict }
-        = buildClassesAndDict(this._traindata, this._bow);
+BrainText.prototype.setUpdateInfrastructure = function() {
+    let { classes, texts, dict } = buildClassesAndDict(this._traindata, this._bow);
     this._classes = classes;
     this._texts = texts;
     this._dict = dict;
@@ -200,13 +200,13 @@ BrainText.prototype.setUpdateInfrastructure = function () {
         ]
    }
  */
-BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString) {
+BrainText.prototype.loadTrainDataFromInputDataString = function(inputDataString) {
     // reset traindata vector
     this._traindata = [];
     let inputDataObj = JSON.parse(inputDataString);
     for (const key in inputDataObj) {
         for (const text of inputDataObj[key]) {
-            this._traindata.push({ label: key, text: text})
+            this._traindata.push({ label: key, text: text })
         }
     }
     // now we shuffle traindata
@@ -221,10 +221,10 @@ BrainText.prototype.loadTrainDataFromInputDataString = function (inputDataString
  * 
  * [{label: 'encender_lampara', text: 'dale a la lamparita'}]
  */
-BrainText.prototype.addData = function (traindata) {
+BrainText.prototype.addData = function(traindata) {
     let traindataProcessed = [];
     traindata.forEach((data) => {
-        let dataProcessed = {label: data.label, text: data.text};
+        let dataProcessed = { label: data.label, text: data.text };
         traindataProcessed.push(dataProcessed);
         this._traindata.forEach((_data) => {
             if (dataProcessed.text == _data.text) {
@@ -248,8 +248,8 @@ BrainText.prototype.addData = function (traindata) {
  * 
  * {label: 'encender_lampara', text: 'dale a la lamparita'}
  */
-BrainText.prototype.addOneData = function (data) {
-    let dataProcessed = {label: data.label, text: data.text};
+BrainText.prototype.addOneData = function(data) {
+    let dataProcessed = { label: data.label, text: data.text };
     this._traindata.forEach((_data) => {
         if (dataProcessed.text == _data.text) {
             console.log("data repeated!");
@@ -263,8 +263,8 @@ BrainText.prototype.addOneData = function (data) {
     return true;
 }
 
-BrainText.prototype.removeData = function (entry) {
-    let entryProcessed = {label: entry.label, text: entry.text};
+BrainText.prototype.removeData = function(entry) {
+    let entryProcessed = { label: entry.label, text: entry.text };
     this._traindata.splice(
         this._traindata.findIndex(
             v => v.label === entryProcessed.label && v.text === entryProcessed.text), 1);
@@ -278,15 +278,15 @@ BrainText.prototype.removeData = function (entry) {
 /** 
  * Get train data
  */
-BrainText.prototype.getTraindata = function () {
+BrainText.prototype.getTraindata = function() {
     return this._traindata;
 }
 
-BrainText.prototype.getState = function () {
+BrainText.prototype.getState = function() {
     return this._status;
 }
 
-BrainText.prototype.getDict = function () {
+BrainText.prototype.getDict = function() {
     return this._dict;
 }
 
@@ -296,7 +296,7 @@ BrainText.prototype.getDict = function () {
  * Please pay attention!, this function returns a promise.
  * 
  */
-BrainText.prototype.train = function () {
+BrainText.prototype.train = function() {
 
     const traindata_for_ann = this.prepareTrainData(this._traindata);
 
@@ -325,7 +325,7 @@ BrainText.prototype.train = function () {
  * 
  * @param {*} text is a string which we want to classify 
  */
-BrainText.prototype.run = function (text) {
+BrainText.prototype.run = function(text) {
     if (this._status == State.UNTRAINED) {
         throw "Network UNTRAINED, can't make any prediction!"
     }
@@ -356,8 +356,8 @@ BrainText.prototype.run = function (text) {
 
 /** 
  * Return the model trained as a JSON object
-*/
-BrainText.prototype.toJSON = function () {
+ */
+BrainText.prototype.toJSON = function() {
     let model = {
         net: this._net.toJSON(),
         dict: this._dict,
@@ -379,7 +379,7 @@ BrainText.prototype.toJSON = function () {
  * @param {*} classes an object like this {apagar_ventilador: 0, encender_ventilador: 1, encender_lampara: 2, apagar_lampara: 3}
  * @param {*} traindata [{label: 'encender_lampara', text: 'dale a la lamparita'}, {...}]
  */
-BrainText.prototype.fromJSON = function (json_model) {
+BrainText.prototype.fromJSON = function(json_model) {
     this._status = State.TRAINED;
     this._dict = json_model.dict;
     this._classes = json_model.classes;
