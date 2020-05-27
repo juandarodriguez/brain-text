@@ -66,7 +66,7 @@ const buildClassesAndDict = function(traindata, bow, lang) {
 
 /////// EXPORTED CONSTRUCTOR FUNCTION /////////
 
-function BrainText() {
+function BrainText(lang) {
 
     /*
      * An array of object like this:
@@ -76,6 +76,7 @@ function BrainText() {
      *     {label: "apagar_lampara", text: "apaga la lámpara"} 
      *   ]
      */
+    this.lang = lang;
     this._traindata = [];
     // _net is the Artificial Neural Network
     this._net = new brain.NeuralNetwork();
@@ -173,7 +174,7 @@ BrainText.prototype.prepareTrainData = function(traindata) {
 }
 
 BrainText.prototype.setUpdateInfrastructure = function() {
-    let { classes, texts, dict } = buildClassesAndDict(this._traindata, this._bow);
+    let { classes, texts, dict } = buildClassesAndDict(this._traindata, this._bow, this.lang);
     this._classes = classes;
     this._texts = texts;
     this._dict = dict;
