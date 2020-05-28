@@ -82,7 +82,7 @@ function BrainText(lang) {
     this._net = new brain.NeuralNetwork();
     // _bow is a library intended to make bag of words processing,
     // for example vectorizing strings
-    this._bow = new brain_bow.BagOfWords();
+    this._bow = new brain_bow.BagOfWords(lang);
     // _dict is a dictionary build from all the sentences of input data texts
     this._dict = {};
     /* _classes are all the classes from input data text formatted to feed the ANN
